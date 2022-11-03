@@ -5,6 +5,7 @@
  */
 package centralizedusergroups;
 
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
@@ -15,13 +16,13 @@ import java.util.concurrent.locks.ReentrantLock;
  */
 public class GroupServer implements GroupServerInterface{
     
-    private LinkedList<Group> listaGrupos;
+    private HashMap<String,Group> listaGrupos;
     ReentrantLock cerrojo;
 
     @Override
     public boolean createGroup(String galias, String oalias, String ohostname) {
         if (this.isGroup(galias)){
-            this.listaGrupos.add(new Group(galias,new GroupMember(oalias,ohostname)));
+            this.listaGrupos.put(galias,new Group(galias,new GroupMember(oalias,ohostname)));
             return true;
         }else return false;
         
@@ -29,28 +30,36 @@ public class GroupServer implements GroupServerInterface{
 
     @Override
     public boolean isGroup(String galias) {
-        for (Group grupo:this.listaGrupos){
-            if (grupo.getNombreGrupo().equals(galias)){
-                return false;
-            }
-        }
-        return true;
+        if (this.listaGrupos.containsKey(galias)){
+            return true;
+        }else return false;
     }
 
     @Override
     public boolean removeGroup(String galias, String oalias) {
-        for (int i = 0; i<this.listaGrupos.size(); i++){
-            if (this.listaGrupos.get(i).nombreGrupo.equals(galias) && this.listaGrupos.get(i).propietario.nombre.equals(oalias)){
-                this.listaGrupos.remove(i);
-                return true;
-            }
+        this.cerrojo.lock();
+        try{
+        if(this.isGroup(galias) && this.listaGrupos.get(galias).propietario.equals(oalias)){//Esto funciona porque java cortocicuita la condicion
+            this.listaGrupos.remove(galias);
+            return true;
+        }else return false;
+        }finally{
+            this.cerrojo.unlock();
         }
-        return false;
+        
     }
 
     @Override
     public boolean addMember(String galias, String alias, String hostname) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        this.cerrojo.lock();
+        try{
+            if(this.isGroup(galias) && this.isMember(galias, alias)){
+                this.listaGrupos.get(galias).listaMiembros.add(new GroupMember(alias,hostname));
+                return true;
+            }else return false;
+        }finally{
+            this.cerrojo.unlock();
+        }     
     }
 
     @Override
@@ -60,12 +69,22 @@ public class GroupServer implements GroupServerInterface{
 
     @Override
     public boolean isMember(String galias, String alias) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        boolean devolver = false;
+        if(this.isGroup(galias)){
+            for (GroupMember miembro :this.listaGrupos.get(galias).listaMiembros){
+                if (miembro.nombre.equals(alias)){
+                    devolver = true;
+                }
+            }
+        }
+        return devolver;
     }
 
     @Override
     public String Owner(String galias) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        if (this.isGroup(galias)){
+            return this.listaGrupos.get(galias).propietario.nombre;
+        }else return null;
     }
 
     @Override
@@ -80,12 +99,18 @@ public class GroupServer implements GroupServerInterface{
 
     @Override
     public LinkedList<String> ListMembers(String galias) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        LinkedList<String> devolver = new LinkedList<>();
+        Group grupo = this.listaGrupos.get(galias);
+        for (GroupMember miembro:grupo.listaMiembros){
+            devolver.add(miembro.nombre);
+        }
+        return devolver;
     }
 
     @Override
     public LinkedList<String> ListGroups() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        LinkedList<String> devolver = (LinkedList)this.listaGrupos.keySet();
+        return devolver;
     }
     
 }
