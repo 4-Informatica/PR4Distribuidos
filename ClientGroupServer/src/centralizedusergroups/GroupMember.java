@@ -9,13 +9,14 @@ package centralizedusergroups;
  *
  * @author usuario
  */
-public class CentralizedUserGroups {
-
-    /**
-     * @param args the command line arguments
-     */
-    public static void main(String[] args) {
-        // TODO code application logic here
+public class GroupMember {
+    
+    public String nombre;
+    public String hostname;
+    
+    public GroupMember(String nombre, String hostname){
+        this.nombre = nombre;
+        this.hostname = hostname;
     }
     
 }
