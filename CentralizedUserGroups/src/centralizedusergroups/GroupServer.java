@@ -33,6 +33,8 @@ public class GroupServer extends UnicastRemoteObject implements GroupServerInter
     
     public GroupServer() throws RemoteException{
         super();
+        this.condiciones = new HashMap();
+        this.booleanos = new HashMap();
         this.cerrojo = new ReentrantLock(true);
         this.listaGrupos = new HashMap();
         //Añadimos los requerimientos de seguroidad en caso de que no estén
@@ -44,7 +46,7 @@ public class GroupServer extends UnicastRemoteObject implements GroupServerInter
     @Override
     public boolean createGroup(String galias, String oalias, String ohostname) throws RemoteException{
         
-        if (this.isGroup(galias)){
+        if (!this.isGroup(galias)){
             this.cerrojo.lock();
             this.listaGrupos.put(galias,new Group(galias,new GroupMember(oalias,ohostname)));
             this.condiciones.put(galias,this.cerrojo.newCondition());
@@ -85,7 +87,7 @@ public class GroupServer extends UnicastRemoteObject implements GroupServerInter
     public boolean addMember(String galias, String alias, String hostname) throws RemoteException {
         
         
-        if(this.isGroup(galias) && this.isMember(galias, alias)){
+        if(this.isGroup(galias) && !(this.isMember(galias, alias))){
             this.cerrojo.lock();
             this.listaGrupos.get(galias).listaMiembros.add(new GroupMember(alias,hostname));
             this.cerrojo.unlock();
@@ -181,7 +183,11 @@ public class GroupServer extends UnicastRemoteObject implements GroupServerInter
 
     @Override
     public LinkedList<String> ListGroups() {
-        LinkedList<String> devolver = (LinkedList)this.listaGrupos.keySet();
+        LinkedList devolver = new LinkedList();
+        for (String key:this.listaGrupos.keySet()){
+            devolver.add(key);
+        }
+            
         return devolver;
     }
     
@@ -197,6 +203,7 @@ class Group{
     
     
     public Group(String nombreGrupo, GroupMember groupMember){
+        this.listaMiembros = new LinkedList();
         this.nombreGrupo = nombreGrupo;
         this.propietario = groupMember;
         this.listaMiembros.add(groupMember);

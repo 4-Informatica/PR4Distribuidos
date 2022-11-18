@@ -41,6 +41,8 @@ public class ClientGroupServer implements GroupServerInterface {
     
     public ClientGroupServer() throws UnknownHostException{
         super();
+        this.condiciones = new HashMap();
+        this.booleanos = new HashMap();
         this.cerrojo = new ReentrantLock(true);
         this.listaGrupos = new HashMap();
         if (System.getSecurityManager() == null) {
@@ -93,70 +95,72 @@ public class ClientGroupServer implements GroupServerInterface {
                         System.out.println("Introduce el nombre del grupo");
                         String grupo = cliente.scan.next();
 
-                        cliente.createGroup(grupo,cliente.alias,cliente.hostname);
+                        servidor.createGroup(grupo,cliente.alias,cliente.hostname);
                         break;
 
                     case 2://2. Eliminar grupo
                         cliente.scan = new Scanner(System.in);
                         System.out.println("Introduce el nombre del grupo");
                         grupo = cliente.scan.next();
-                        cliente.removeGroup(grupo,cliente.alias);
+                        System.out.println(servidor.removeGroup(grupo,cliente.alias));
                         break;
 
                     case 3://3. Añadir miembro
                         cliente.scan = new Scanner(System.in);
                         System.out.println("Introduce el nombre del grupo");
                         grupo = cliente.scan.next();
-                        cliente.addMember(grupo, cliente.alias, cliente.hostname);
+                        System.out.println(servidor.addMember(grupo, cliente.alias, cliente.hostname));
                         break;
 
                     case 4://4. Eliminar miembro
                         cliente.scan = new Scanner(System.in);
                         System.out.println("Introduce el nombre del grupo");
                         grupo = cliente.scan.next();
-                        cliente.removeMember(grupo,cliente.alias);
+                        System.out.println(servidor.removeMember(grupo,cliente.alias));
                         break;
 
                     case 5://5. Bloquear altas y bajas             
                         cliente.scan = new Scanner(System.in);
                         System.out.println("Introduce el nombre del grupo");
                         grupo = cliente.scan.next();
-                        cliente.StopMembers(grupo);
+                        System.out.println(servidor.StopMembers(grupo));
                         break;
 
                     case 6: //6. Desbloquear altas y bajas
                         cliente.scan = new Scanner(System.in);
                         System.out.println("Introduce el nombre del grupo");
                         grupo = cliente.scan.next();
-                        cliente.AllowMembers(grupo);
+                        System.out.println(servidor.AllowMembers(grupo));
                         break;
 
                     case 7://7. Mostrar miembros de un grupo
                         cliente.scan = new Scanner(System.in);
                         System.out.println("Introduce el nombre del grupo");
                         grupo = cliente.scan.next();
-                        cliente.ListMembers(grupo);
+                        System.out.println(servidor.ListMembers(grupo));
                         break;
 
                     case 8://8. Mostrar lista de grupos
-                        cliente.ListGroups();
+                        System.out.println(servidor.ListGroups());
                         break;
 
                     case 9://9. Mostrar propietario de un grupo
                         cliente.scan = new Scanner(System.in);
                         System.out.println("Introduce el nombre del grupo");
                         grupo = cliente.scan.next();
-                        cliente.Owner(grupo);
+                        System.out.println(servidor.Owner(grupo));
                         break;
                     case 10://10. Comprobar si es miembro de un grupo
                         cliente.scan = new Scanner(System.in);
                         System.out.println("Introduce el nombre del grupo");
                         grupo = cliente.scan.next();
-                        cliente.isMember(grupo, cliente.alias);
+                        System.out.println(servidor.isMember(grupo, cliente.alias));
                         break;
                     case 11://11.Terminar Ejecucion
                         terminar = false;
                         break;
+                    default:
+                        System.out.println("Esta entrada no es válida, por favor introduce otra");
                 }  
             }
             }catch(RemoteException ex){
@@ -171,7 +175,7 @@ public class ClientGroupServer implements GroupServerInterface {
     @Override
     public boolean createGroup(String galias, String oalias, String ohostname) throws RemoteException{
         
-        if (this.isGroup(galias)){
+        if (!this.isGroup(galias)){
             this.cerrojo.lock();
             this.listaGrupos.put(galias,new Group(galias,new GroupMember(oalias,ohostname)));
             this.condiciones.put(galias,this.cerrojo.newCondition());
@@ -308,8 +312,49 @@ public class ClientGroupServer implements GroupServerInterface {
 
     @Override
     public LinkedList<String> ListGroups() {
-        LinkedList<String> devolver = (LinkedList)this.listaGrupos.keySet();
+        LinkedList devolver = new LinkedList();
+        for (String key:this.listaGrupos.keySet()){
+            devolver.add(key);
+        }
+            
+        
         return devolver;
+    }
+    
+}
+class Group{
+    
+    String nombreGrupo;
+    
+    GroupMember propietario;
+    
+    LinkedList<GroupMember> listaMiembros;
+    
+    
+    public Group(String nombreGrupo, GroupMember groupMember){
+        this.listaMiembros = new LinkedList();
+        this.nombreGrupo = nombreGrupo;
+        this.propietario = groupMember;
+        this.listaMiembros.add(groupMember);
+    }
+    
+    public String getNombreGrupo(){
+        return this.nombreGrupo;
+    }
+    
+    //Funcion para eliminar un miembro con alias
+    public boolean removeMember(String alias){
+        if (this.propietario.nombre.equals(alias)){ // Comprobamos que no es el propietario
+            return false;
+        }else{
+            for(GroupMember miembro:listaMiembros){
+                if(miembro.nombre.equals(alias)){
+                    this.listaMiembros.remove(miembro);
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 }
     
