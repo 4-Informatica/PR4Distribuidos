@@ -1,7 +1,8 @@
-grant { 
-    permission java.security.AllPermission;
-
-    permission java.net.SocketPermission "*:*","connect,resolve";
-
-    permission java.net.SocketPermission "*:*","accept";
+grant{
+    
+permission java.security.AllPermission;
+    
+permission java.net.SocketPermission "*:*","connect,resolve";
+    
+permission java.net.SocketPermission "*:*","accept";
 };

@@ -54,7 +54,7 @@ public class GroupServer extends UnicastRemoteObject implements GroupServerInter
             this.cerrojo.unlock();
             return true;
         }else return false;
-        127.0.0.1
+        
         
     }
 
