@@ -54,7 +54,7 @@ public class GroupServer extends UnicastRemoteObject implements GroupServerInter
             this.cerrojo.unlock();
             return true;
         }else return false;
-        
+        127.0.0.1
         
     }
 
@@ -85,21 +85,35 @@ public class GroupServer extends UnicastRemoteObject implements GroupServerInter
 
     @Override
     public boolean addMember(String galias, String alias, String hostname) throws RemoteException {
-        
-        
+        this.cerrojo.lock();
+        try{
+        if(this.booleanos.get(galias)){
+            try{
+                System.out.println("El cliente se encuentra bloqueado porque no está permitida la entrada al grupo");
+                this.condiciones.get(galias).await();
+            }catch (InterruptedException ex) {
+                System.out.println("Ha ocurrido una excepcion en el await de addMember");
+            }
+        }
         if(this.isGroup(galias) && !(this.isMember(galias, alias))){
             this.cerrojo.lock();
             this.listaGrupos.get(galias).listaMiembros.add(new GroupMember(alias,hostname));
             this.cerrojo.unlock();
             return true;
         }else return false;
-           
+        
+        }finally{
+            this.cerrojo.unlock();
+        }  
     }
 
     @Override
     public boolean removeMember(String galias, String alias) throws RemoteException {
+        this.cerrojo.lock();
+        try{
         if(this.booleanos.get(galias)){
             try {
+                System.out.println("El cliente se encuentra bloqueado porque no está permitida la salida del grupo");
                 this.condiciones.get(galias).await();//Si los miembros del grupo estan parados me espero a que vuelvan a estar permitidos
             } catch (InterruptedException ex) {
                 System.out.println("Ha ocurrido una excepcion en el await de removeMember");
@@ -111,6 +125,9 @@ public class GroupServer extends UnicastRemoteObject implements GroupServerInter
         }else{
             return false;
         }    
+        }finally{
+            this.cerrojo.unlock();
+        }
         
     }
 
