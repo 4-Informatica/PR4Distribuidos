@@ -56,7 +56,8 @@ public class ClientGroupServer implements GroupServerInterface {
         
     }
     
-    public static void main(String[] args) throws UnknownHostException, MalformedURLException{
+    public static void main(String[] args) throws UnknownHostException, MalformedURLException, NotBoundException{
+        System.setProperty("java.rmi.server.hostname","192.168.0.26");
         System.setProperty("java.security.policy", "/home/usuario/Escritorio/PR4Distribuidos/ClientGroupServer/src/centralizedusergroups/client-policy");
 
         try{
@@ -64,7 +65,7 @@ public class ClientGroupServer implements GroupServerInterface {
            
             
             Registry reg = LocateRegistry.getRegistry(cliente.IpServidor,1099);
-            servidor=(GroupServerInterface) reg.lookup("GroupServer");
+            servidor=(GroupServerInterface) reg.lookup("gabriel/GroupServer");
           
             System.out.println("Cliente conectado desde: " + InetAddress.getLocalHost().getHostAddress() + ":" + cliente.puerto);
         
@@ -80,7 +81,7 @@ public class ClientGroupServer implements GroupServerInterface {
                 System.out.println("8. Mostrar lista de grupos");
                 System.out.println("9. Mostrar propietario de un grupo");
                 System.out.println("10. Comprobar si es miembro de un grupo");
-                System.out.println("11. Terminar Ejeución");
+                System.out.println("11. Terminar Ejecución");
                 int s=cliente.scan.nextInt();
 
 
